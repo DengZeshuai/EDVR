@@ -35,6 +35,8 @@ def create_dataset(dataset_opt):
     # datasets for video restoration
     elif mode == 'REDS':
         from data.REDS_dataset import REDSDataset as D
+    elif mode == 'MM522':
+        from data.MM522_dataset import MM522Dataset as D
     elif mode == 'Vimeo90K':
         from data.Vimeo90K_dataset import Vimeo90KDataset as D
     elif mode == 'video_test':

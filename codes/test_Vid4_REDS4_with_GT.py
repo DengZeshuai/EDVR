@@ -31,7 +31,8 @@ def main():
     #### model
     if data_mode == 'Vid4':
         if stage == 1:
-            model_path = '../experiments/pretrained_models/EDVR_Vimeo90K_SR_L.pth'
+            # model_path = '../../../pretrained_models/EDVR/EDVR_Vimeo90K_SR_L.pth'
+            model_path = '../experiments/007_EDVR_Video90K_Linit_lr4e-4_600k_MM522_LrCAR4S/models/90000_G.pth'
         else:
             raise ValueError('Vid4 does not support stage 2.')
     elif data_mode == 'sharp_bicubic':
@@ -63,6 +64,7 @@ def main():
         N_in = 5
 
     predeblur, HR_in = False, False
+    w_TSA = True
     back_RBs = 40
     if data_mode == 'blur_bicubic':
         predeblur = True
@@ -71,7 +73,8 @@ def main():
     if stage == 2:
         HR_in = True
         back_RBs = 20
-    model = EDVR_arch.EDVR(128, N_in, 8, 5, back_RBs, predeblur=predeblur, HR_in=HR_in)
+    model = EDVR_arch.EDVR(128, N_in, 8, 5, back_RBs, predeblur=predeblur, HR_in=HR_in, w_TSA=w_TSA)
+    # model = EDVR_arch.EDVR(128, N_in, 8, 5, 10, predeblur=predeblur, HR_in=HR_in, w_TSA=False)
 
     #### dataset
     if data_mode == 'Vid4':
@@ -115,11 +118,14 @@ def main():
     avg_psnr_l, avg_psnr_center_l, avg_psnr_border_l = [], [], []
     subfolder_name_l = []
 
-    subfolder_l = sorted(glob.glob(osp.join(test_dataset_folder, '*')))
-    subfolder_GT_l = sorted(glob.glob(osp.join(GT_dataset_folder, '*')))
+    # subfolder_l = sorted(glob.glob(osp.join(test_dataset_folder, '*')))
+    # subfolder_GT_l = sorted(glob.glob(osp.join(GT_dataset_folder, '*')))
+    subfolder_l = sorted(glob.glob('/mnt/dataset/sr/vid4/*/blur4'))
+    subfolder_GT_l = sorted(glob.glob('/mnt/dataset/sr/vid4/*/truth'))
     # for each subfolder
     for subfolder, subfolder_GT in zip(subfolder_l, subfolder_GT_l):
-        subfolder_name = osp.basename(subfolder)
+        # subfolder_name = osp.basename(subfolder)
+        subfolder_name = osp.basename(osp.dirname(subfolder))
         subfolder_name_l.append(subfolder_name)
         save_subfolder = osp.join(save_folder, subfolder_name)
 

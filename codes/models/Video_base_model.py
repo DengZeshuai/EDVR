@@ -71,6 +71,29 @@ class VideoBaseModel(BaseModel):
                         'lr': train_opt['lr_G']
                     },
                 ]
+            elif train_opt['pcd_half_lr']:
+                normal_params = []
+                pcd_align_params = []
+                for k, v in self.netG.named_parameters():
+                    if v.requires_grad:
+                        # if 'pcd_align' in k:
+                        if 'dcnpack' in k:
+                            pcd_align_params.append(v)
+                        else:
+                            normal_params.append(v)
+                    else:
+                        if self.rank <= 0:
+                            logger.warning('Params [{:s}] will not optimize.'.format(k))
+                optim_params = [
+                    {  # add normal params first
+                        'params': normal_params,
+                        'lr': train_opt['lr_G']
+                    },
+                    {
+                        'params': pcd_align_params,
+                        'lr': train_opt['lr_G'] * train_opt['pcd_lr_weight']
+                    },
+                ]
             else:
                 optim_params = []
                 for k, v in self.netG.named_parameters():
@@ -114,9 +137,18 @@ class VideoBaseModel(BaseModel):
         # fix normal module
         self.optimizers[0].param_groups[0]['lr'] = 0
 
+    def set_params_lr_half(self):
+        # set pcd module lr to half of normal lr
+        self.optimizers[0].param_groups[1]['lr'] = \
+            self.optimizers[0].param_groups[0]['lr'] * self.opt['train']['pcd_lr_weight']
+
     def optimize_parameters(self, step):
         if self.opt['train']['ft_tsa_only'] and step < self.opt['train']['ft_tsa_only']:
             self.set_params_lr_zero()
+        
+        if self.opt['train']['pcd_half_lr']:
+            self.set_params_lr_half()
+
 
         self.optimizer_G.zero_grad()
         self.fake_H = self.netG(self.var_L)

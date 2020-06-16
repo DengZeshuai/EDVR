@@ -1,4 +1,5 @@
 import os.path as osp
+import glob
 import torch
 import torch.utils.data as data
 import data.util as util
@@ -27,10 +28,16 @@ class VideoTestDataset(data.Dataset):
         #### Generate data info and cache data
         self.imgs_LQ, self.imgs_GT = {}, {}
         if opt['name'].lower() in ['vid4', 'reds4']:
-            subfolders_LQ = util.glob_file_list(self.LQ_root)
-            subfolders_GT = util.glob_file_list(self.GT_root)
+            if opt['name'].lower() == 'vid4':
+                subfolders_LQ = sorted(glob.glob(self.LQ_root))
+                subfolders_GT = sorted(glob.glob(self.GT_root))
+            else:
+                subfolders_LQ = util.glob_file_list(self.LQ_root)
+                subfolders_GT = util.glob_file_list(self.GT_root)
             for subfolder_LQ, subfolder_GT in zip(subfolders_LQ, subfolders_GT):
                 subfolder_name = osp.basename(subfolder_GT)
+                if subfolder_name in ['blur4', 'truth']:
+                    subfolder_name = osp.basename(osp.dirname(subfolder_GT))
                 img_paths_LQ = util.glob_file_list(subfolder_LQ)
                 img_paths_GT = util.glob_file_list(subfolder_GT)
                 max_idx = len(img_paths_LQ)

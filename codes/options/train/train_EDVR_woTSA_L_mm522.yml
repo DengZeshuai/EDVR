@@ -1,0 +1,73 @@
+#### general settings
+name: 006_EDVRwoTSA_Minit_lr4e-4_600k_MM522_LrCAR4S
+use_tb_logger: true
+model: video_base
+distortion: sr
+scale: 4
+gpu_ids: [4,5,6,7]
+
+#### datasets
+datasets:
+  train:
+    name: MM522
+    mode: MM522
+    interval_list: [1]
+    random_reverse: false
+    border_mode: false
+    dataroot_GT: /mnt/dataset/sr/
+    dataroot_LQ: ~
+    cache_keys: ~
+
+    N_frames: 7
+    use_shuffle: true
+    n_workers: 4  # per GPU
+    batch_size: 32
+    GT_size: 256
+    LQ_size: 64
+    use_flip: true
+    use_rot: true
+    color: RGB
+
+#### network structures
+network_G:
+  which_model_G: EDVR
+  nf: 128
+  nframes: 7
+  groups: 8
+  front_RBs: 5
+  back_RBs: 40
+  predeblur: false
+  HR_in: false
+  w_TSA: false
+
+#### path
+path:
+  pretrain_model_G: ../experiments/006_EDVRwoTSA_Minit_lr4e-4_600k_MM522_LrCAR4S/models/300000_G.pth
+  strict_load: true
+  resume_state: ../experiments/006_EDVRwoTSA_Minit_lr4e-4_600k_MM522_LrCAR4S/training_state/300000.state
+
+#### training settings: learning rate scheme, loss
+train:
+  lr_G: !!float 4e-4
+  lr_scheme: CosineAnnealingLR_Restart
+  beta1: 0.9
+  beta2: 0.99
+  niter: 600000
+  pcd_half_lr: true
+  pcd_lr_weight: 0.1
+  warmup_iter: -1  # -1: no warm up
+  T_period: [150000, 150000, 150000, 150000]
+  restarts: [150000, 300000, 450000]
+  restart_weights: [1, 1, 1]
+  eta_min: !!float 1e-7
+  
+  pixel_criterion: cb
+  pixel_weight: 1.0
+  val_freq: !!float 2e3
+
+  manual_seed: 7
+
+#### logger
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 2e3
